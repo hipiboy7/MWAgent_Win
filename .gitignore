@@ -1,0 +1,34 @@
+# ===========================
+# MWAgent .gitignore
+# ===========================
+
+# WinSW service logs (generated at runtime → log/ dir)
+log/*.log
+log/*.log.lck
+log/*.log.old
+log/*.log_bak
+
+# Java app logs in root (should not appear, but just in case)
+*.log
+*.log.lck
+
+# JAR backup files
+*.jar.bak*
+
+# New JAR staging file (used by restart mechanism)
+new_mwagent.jar
+
+# Temp directory
+tmp/
+
+# Old files archive
+_old/
+
+# Script directory if empty
+script/
+
+# ===========================
+# DO NOT IGNORE:
+# CONTEXT.md, CONTEXT_KR.md  ← intentionally tracked
+# agent.properties            ← intentionally tracked (token is rotated regularly)
+# ===========================

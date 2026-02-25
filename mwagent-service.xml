@@ -1,0 +1,15 @@
+<service>
+  <id>MWAgent</id>
+  <name>MWAgent Service</name>
+  <description>Middleware Agent Service for MWAgent</description>
+  <executable>java</executable>
+  <arguments>-cp .;lib/*;mwagent.jar -Dname=mwagent.SYSADMIN -Djava.util.logging.config.file=log/logging.properties -Xms256m -Xmx256m mwagent.MwAgent</arguments>
+  
+  <env name="USER" value="SYSADMIN"/>
+  <env name="HOSTNAME" value="WIN-RVA6N8ACU27"/>
+  <env name="DOMAIN_NAME" value="SCP_WINDOW"/>
+  
+  <workingdirectory>C:\Users\SYSADMIN\MWAgent</workingdirectory>
+  <logpath>C:\Users\SYSADMIN\MWAgent\log</logpath>
+  <log mode="roll"></log>
+</service>
