@@ -21,6 +21,9 @@ new_mwagent.jar
 # Temp directory
 tmp/
 
+# Deploy output
+deploy/
+
 # Old files archive
 _old/
 
