@@ -3,6 +3,17 @@ setlocal EnableDelayedExpansion
 cd /d %~dp0
 
 :: MWAgent Service Restart Script
+:: Auto-elevation to Administrator
+net session >nul 2>&1
+if %ERRORLEVEL% NEQ 0 (
+    echo [INFO] Requesting administrative privileges...
+    echo Set UAC = CreateObject^("Shell.Application"^) > "%temp%\getadmin.vbs"
+    echo UAC.ShellExecute "%~s0", "", "", "runas", 1 >> "%temp%\getadmin.vbs"
+    "%temp%\getadmin.vbs"
+    del "%temp%\getadmin.vbs"
+    exit /b
+)
+:: End of Auto-elevation
 
 if not exist "log" mkdir "log"
 set LOG_FILE=log\script_history.log
