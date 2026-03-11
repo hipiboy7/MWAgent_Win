@@ -20,7 +20,25 @@ echo   Working Dir : %cd%
 echo   Script Path : %~dp0
 echo   Username    : %USERNAME%
 echo   UserDomain  : %USERDOMAIN%
+echo.
+echo   --- whoami ---
 whoami
+echo.
+echo   --- Admin group check ---
+net localgroup Administrators 2>nul | find /i "%USERNAME%"
+if %ERRORLEVEL% EQU 0 (
+    echo   [OK] %USERNAME% is in Administrators group
+) else (
+    echo   [WARN] %USERNAME% is NOT in Administrators group
+)
+echo.
+echo   --- Elevated check ---
+net session >nul 2>&1
+if %ERRORLEVEL% EQU 0 (
+    echo   [OK] Running with elevated privileges
+) else (
+    echo   [WARN] NOT running with elevated privileges
+)
 echo.
 
 :: [STEP 2] 파라미터 확인 및 JAR 스테이징
@@ -48,25 +66,37 @@ schtasks /Delete /TN "MWAgentRestart" /F > nul 2>&1
 echo   ERRORLEVEL = %ERRORLEVEL% (0=deleted, 1=not found, both OK)
 echo.
 
-:: [STEP 4] 예약 작업 생성 (SYSTEM 권한)
+:: [STEP 4] 예약 작업 생성 - 서버팀 가이드 형식 (/SC DAILY, /SD 없음)
 echo [STEP 4] Create scheduled task as SYSTEM...
-echo   Command: schtasks /Create /TN "MWAgentRestart" /TR "%~dp0restart.bat" /SC ONCE /ST 00:00 /SD 01/01/2000 /RU SYSTEM /F
-schtasks /Create /TN "MWAgentRestart" /TR "%~dp0restart.bat" /SC ONCE /ST 00:00 /SD 01/01/2000 /RU SYSTEM /F
+echo.
+echo   [4A] Trying server-team format: /SC DAILY /ST 23:00
+echo   Command: schtasks /Create /RU SYSTEM /SC DAILY /TN "MWAgentRestart" /TR "%~dp0restart.bat" /ST 23:00
+schtasks /Create /RU SYSTEM /SC DAILY /TN "MWAgentRestart" /TR "%~dp0restart.bat" /ST 23:00
 echo   ERRORLEVEL = %ERRORLEVEL%
-if %ERRORLEVEL% NEQ 0 (
-    echo   [FAIL] Task creation failed!
-    echo.
-    echo   --- Possible Causes ---
-    echo   1. Security policy blocks /RU SYSTEM
-    echo   2. Not running as Administrator
-    echo   3. Task Scheduler service not running
-    echo.
-    echo   --- Checking Task Scheduler service ---
-    sc query Schedule | find "STATE"
-    echo   -----------------------------------
-    exit /b 1
+if %ERRORLEVEL% EQU 0 (
+    echo   [OK] Task created with DAILY format!
+    goto :RUNTASK
 )
-echo   [OK] Task created successfully.
+echo   [FAIL] DAILY format failed.
+echo.
+
+echo   [4B] Trying original format: /SC ONCE /ST 00:00 /SD 2000/01/01
+echo   Command: schtasks /Create /TN "MWAgentRestart" /TR "%~dp0restart.bat" /SC ONCE /ST 00:00 /SD 2000/01/01 /RU SYSTEM /F
+schtasks /Create /TN "MWAgentRestart" /TR "%~dp0restart.bat" /SC ONCE /ST 00:00 /SD 2000/01/01 /RU SYSTEM /F
+echo   ERRORLEVEL = %ERRORLEVEL%
+if %ERRORLEVEL% EQU 0 (
+    echo   [OK] Task created with ONCE format!
+    goto :RUNTASK
+)
+echo   [FAIL] ONCE format also failed.
+echo.
+echo   --- Both methods failed ---
+echo   Task Scheduler service status:
+sc query Schedule | find "STATE"
+echo   ----------------------------
+exit /b 1
+
+:RUNTASK
 echo.
 
 :: [STEP 5] 예약 작업 실행
